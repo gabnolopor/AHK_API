@@ -4,15 +4,14 @@ node_modules/
 # Environment variables
 .env
 
-# Logs
-logs/
-*.log
-npm-debug.log*
+# Log files but keep the directory
+logs/*
+!logs/.gitkeep
 
 # System files
 .DS_Store
 
-# Uploaded content files, but keep the directory structure
+# Keep upload directories but not their contents
 public/uploads/*
 !public/uploads/.gitkeep
 uploads/*

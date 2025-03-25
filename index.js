@@ -6,6 +6,11 @@ const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const multer = require("multer");
 require('dotenv').config();
+
+// Ensure log directories exist before initializing logger
+const ensureLogDirectories = require('./utils/ensureLogDirectories');
+ensureLogDirectories();
+
 const { logger, createModuleLogger } = require("./utils/logger");
 const { testConnection } = require('./utils/cloudinary');
 
