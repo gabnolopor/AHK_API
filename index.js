@@ -135,21 +135,7 @@ app.use((err, req, res, next) => {
 
 //health check
 app.get("/health", (req, res) => {
-  conexion.query("SELECT 1", (err, results) => {
-    if (err) {
-      appLogger.error({
-        type: "health_check_failed",
-        error: err.message,
-        stack: err.stack,
-      });
-      return res.status(500).send("Internal Server Error");
-    }
-    appLogger.info({
-      type: "health_check_success",
-      timestamp: new Date().toISOString(),
-    });
-    return res.status(200).send("OK");
-  });
+  res.status(200).send("OK");
 });
 
 // Add routes
