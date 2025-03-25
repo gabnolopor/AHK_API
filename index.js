@@ -61,14 +61,18 @@ const corsOptions = {
       origin: origin,
     });
 
-    if (!origin || origin === "http://localhost:5173") {
-      callback(null, true);
+    // Get allowed origins from environment variable (split into array)
+    const allowedOrigins = process.env.CORS_ORIGINS.split(',');
+
+    // Check if the origin is in the allowedOrigins list or if it is localhost
+    if (!origin || allowedOrigins.includes(origin) || origin === "http://localhost:5173") {
+      callback(null, true);  // Allow the request
     } else {
       appLogger.warn({
         type: "cors_blocked",
         origin: origin,
       });
-      callback(new Error("Not allowed by CORS"));
+      callback(new Error("Not allowed by CORS"));  // Block the request
     }
   },
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
