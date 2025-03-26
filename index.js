@@ -260,6 +260,10 @@ app.get("/api/test-cloudinary", async (req, res) => {
     }
 });
 
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+});
+
 //inicio del servidor
 const puerto = process.env.PORT || 3000;
 
