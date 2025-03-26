@@ -63,7 +63,10 @@ const corsOptions = {
 
     // Get allowed origins from environment variable (split into array)
     const allowedOrigins = process.env.CORS_ORIGINS.split(',');
-
+    
+    // Explicitly add your production domain
+    allowedOrigins.push('https://www.zigzagworx.com');
+    
     // Check if the origin is in the allowedOrigins list or if it is localhost
     if (!origin || allowedOrigins.includes(origin) || origin === "http://localhost:5173") {
       callback(null, true);  // Allow the request
