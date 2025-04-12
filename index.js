@@ -22,6 +22,7 @@ const musicRoutes = require("./routes/MusicRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const biographyRoutes = require("./routes/BiographyRoutes");
 const designRoutes = require("./routes/DesignRoutes");
+const digitalArtRoutes = require("./routes/DigitalArtRoutes");
 
 //configuración
 const mongoose = require("mongoose");
@@ -61,8 +62,8 @@ const corsOptions = {
       origin: origin,
     });
 
-    // Get allowed origins from environment variable (split into array)
-    const allowedOrigins = process.env.CORS_ORIGINS.split(',');
+    // Get allowed origins from environment variable
+    const allowedOrigins = [process.env.CORS_ORIGIN];
     
     // Explicitly add your production domain
     allowedOrigins.push('https://www.zigzagworx.com');
@@ -152,6 +153,7 @@ app.use("/api", photographyRoutes);
 app.use("/api", musicRoutes);
 app.use("/api", biographyRoutes);
 app.use("/api", designRoutes);
+app.use("/api", digitalArtRoutes);
 app.use("/api", adminRoutes);
 //testing
 app.get("/test", (req, res) => {
@@ -199,6 +201,11 @@ app.get("/api/debug", async (req, res) => {
           ? await db.collection("Biography").find({}).toArray()
           : [];
 
+      const digitalArtCollection = collections.find((c) => c.name === "Digital");
+      const digitalArtData = digitalArtCollection
+          ? await db.collection("Digital").find({}).toArray()
+          : [];
+
       res.json({
           availableCollections: collections.map((c) => c.name),
           writings: {
@@ -237,6 +244,12 @@ app.get("/api/debug", async (req, res) => {
               documentCount: biographyData.length,
               documents: biographyData,
           },
+          digitalArt: {
+              collectionExists: !!digitalArtCollection,
+              collectionName: digitalArtCollection?.name,
+              documentCount: digitalArtData.length,
+              documents: digitalArtData,
+          },
       });
   } catch (error) {
       console.error("Debug route error:", error);
@@ -262,6 +275,8 @@ app.get("/api/test-cloudinary", async (req, res) => {
         });
     }
 });
+
+app.use(express.static(path.join(__dirname, '../client/dist')));
 
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../client/dist/index.html'));
