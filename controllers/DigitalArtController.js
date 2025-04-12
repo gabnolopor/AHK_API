@@ -75,7 +75,7 @@ const digitalArtController = {
     createDigitalArt: async (req, res) => {
         try {
             console.log('File:', req.file);
-            console.log('Title:', req.body.title);
+            console.log('Name:', req.body.name);
             console.log('Description:', req.body.description);
             
             if (!req.file && !req.body.imageUrl) {
@@ -130,7 +130,7 @@ const digitalArtController = {
             }
 
             const digitalArt = new DigitalArt({
-                title: req.body.title,
+                name: req.body.name,
                 description: req.body.description,
                 imageUrl: imageUrl
             });
@@ -140,7 +140,7 @@ const digitalArtController = {
             digitalArtLogger.info({
                 type: 'digital_art_created',
                 artId: savedDigitalArt._id,
-                title: savedDigitalArt.title
+                name: savedDigitalArt.name
             });
             
             res.status(201).json(savedDigitalArt);
@@ -167,7 +167,7 @@ const digitalArtController = {
             }
 
             const updates = {
-                title: req.body.title || digitalArt.title,
+                name: req.body.name || digitalArt.name,
                 description: req.body.description || digitalArt.description
             };
             
@@ -236,7 +236,7 @@ const digitalArtController = {
             digitalArtLogger.info({
                 type: 'digital_art_updated',
                 artId: updatedDigitalArt._id,
-                title: updatedDigitalArt.title
+                name: updatedDigitalArt.name
             });
             
             res.json(updatedDigitalArt);
