@@ -13,7 +13,7 @@ const digitalArtController = {
             
             // Transform the data to include correct Cloudinary URLs
             const digitalArtWithUrls = digitalArt.map(art => {
-                const publicId = art.imageUrl;
+                const publicId = art.filename;
                 
                 const imageUrl = cloudinary.url(publicId, {
                     cloud_name: process.env.CLOUDINARY_NAME,
@@ -78,7 +78,7 @@ const digitalArtController = {
             console.log('Name:', req.body.name);
             console.log('Description:', req.body.description);
             
-            if (!req.file && !req.body.imageUrl) {
+            if (!req.file && !req.body.filename) {
                 digitalArtLogger.error({
                     type: 'create_digital_art_error',
                     error: 'No image provided'
@@ -86,7 +86,7 @@ const digitalArtController = {
                 return res.status(400).json({ error: 'No image provided' });
             }
 
-            let imageUrl;
+            let filename;
             
             // Upload to Cloudinary if file is provided
             if (req.file) {
@@ -104,7 +104,7 @@ const digitalArtController = {
                     url: result.secure_url
                 });
                 
-                imageUrl = result.public_id;
+                filename = result.public_id;
                 
                 // Delete the local file after successful upload
                 if (req.file.path) {
@@ -126,13 +126,13 @@ const digitalArtController = {
                     });
                 }
             } else {
-                imageUrl = req.body.imageUrl;
+                filename = req.body.filename;
             }
 
             const digitalArt = new DigitalArt({
                 name: req.body.name,
                 description: req.body.description,
-                imageUrl: imageUrl
+                filename: filename
             });
 
             const savedDigitalArt = await digitalArt.save();
@@ -187,7 +187,7 @@ const digitalArtController = {
                 });
                 
                 // Update with new Cloudinary filename
-                updates.imageUrl = result.public_id;
+                updates.filename = result.public_id;
                 
                 // Delete the local file after successful upload
                 if (req.file.path) {
@@ -210,18 +210,18 @@ const digitalArtController = {
                 }
                 
                 // Delete old image from Cloudinary if it exists
-                if (digitalArt.imageUrl && digitalArt.imageUrl.startsWith('digital-art/')) {
+                if (digitalArt.filename) {
                     try {
-                        await cloudinary.uploader.destroy(digitalArt.imageUrl);
+                        await cloudinary.uploader.destroy(digitalArt.filename);
                         digitalArtLogger.info({
                             type: 'cloudinary_delete_success',
-                            publicId: digitalArt.imageUrl
+                            publicId: digitalArt.filename
                         });
                     } catch (cloudinaryError) {
                         digitalArtLogger.error({
                             type: 'cloudinary_delete_error',
                             error: cloudinaryError.message,
-                            publicId: digitalArt.imageUrl
+                            publicId: digitalArt.filename
                         });
                     }
                 }
@@ -263,18 +263,18 @@ const digitalArtController = {
             }
 
             // Delete from Cloudinary first if the image is stored there
-            if (digitalArt.imageUrl && digitalArt.imageUrl.startsWith('digital-art/')) {
+            if (digitalArt.filename) {
                 try {
-                    await cloudinary.uploader.destroy(digitalArt.imageUrl);
+                    await cloudinary.uploader.destroy(digitalArt.filename);
                     digitalArtLogger.info({
                         type: 'cloudinary_delete_success',
-                        publicId: digitalArt.imageUrl
+                        publicId: digitalArt.filename
                     });
                 } catch (cloudinaryError) {
                     digitalArtLogger.error({
                         type: 'cloudinary_delete_error',
                         error: cloudinaryError.message,
-                        publicId: digitalArt.imageUrl
+                        publicId: digitalArt.filename
                     });
                 }
             }

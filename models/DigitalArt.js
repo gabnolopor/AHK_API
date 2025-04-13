@@ -9,7 +9,7 @@ const digitalArtSchema = new mongoose.Schema({
         type: String,
         required: false
     },
-    imageUrl: {
+    filename: {
         type: String,
         required: true
     },
