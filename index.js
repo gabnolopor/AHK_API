@@ -57,26 +57,21 @@ const fileFilter = (req, file, cb) => {
 //configuración de cors
 const corsOptions = {
   origin: (origin, callback) => {
+    const allowedOrigins = process.env.CORS_ORIGINS.split(',').map(o => o.trim());
+
     appLogger.info({
       type: "cors_request",
       origin: origin,
     });
 
-    // Get allowed origins from environment variable
-    const allowedOrigins = [process.env.CORS_ORIGIN];
-    
-    // Explicitly add your production domain
-    allowedOrigins.push('https://www.zigzagworx.com');
-    
-    // Check if the origin is in the allowedOrigins list or if it is localhost
-    if (!origin || allowedOrigins.includes(origin) || origin === "http://localhost:5173") {
-      callback(null, true);  // Allow the request
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
     } else {
       appLogger.warn({
         type: "cors_blocked",
         origin: origin,
       });
-      callback(new Error("Not allowed by CORS"));  // Block the request
+      callback(new Error("Not allowed by CORS"));
     }
   },
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
