@@ -23,6 +23,7 @@ const digitalArtRoutes = require("./routes/DigitalArtRoutes");
 
 //configuración
 const mongoose = require("mongoose");
+const conexion = require("./database");
 require("dotenv").config();
 
 const appLogger = createModuleLogger("app");
