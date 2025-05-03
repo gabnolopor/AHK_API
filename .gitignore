@@ -16,3 +16,5 @@ public/uploads/*
 !public/uploads/.gitkeep
 uploads/*
 !uploads/.gitkeep
+
+scripts/addAdmin.js 

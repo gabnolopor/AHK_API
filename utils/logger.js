@@ -1,24 +1,34 @@
 const bunyan = require('bunyan');
 const path = require('path');
 
-// Create rotating file streams for different log levels
-const logger = bunyan.createLogger({
-    name: 'ArtGalleryServer',
-    streams: [
+// Create logger with appropriate streams based on environment
+const getLoggerStreams = () => {
+    // In production, only log to stdout to avoid file system issues
+    if (process.env.NODE_ENV === 'production') {
+        return [
+            {
+                level: 'info',
+                stream: process.stdout
+            }
+        ];
+    }
+    
+    // In development, use file-based logging
+    return [
         {
             level: 'info',
             path: path.join(__dirname, '../logs/info.log'),
             type: 'rotating-file',
-            period: '1d',    // Rotate daily
-            count: 7,        // Keep 7 days of logs
+            period: '1d',
+            count: 7,
             serializers: bunyan.stdSerializers
         },
         {
             level: 'error',
             path: path.join(__dirname, '../logs/error.log'),
             type: 'rotating-file',
-            period: '1d',    // Rotate daily
-            count: 14,       // Keep 14 days of error logs
+            period: '1d',
+            count: 14,
             serializers: bunyan.stdSerializers
         },
         {
@@ -29,11 +39,15 @@ const logger = bunyan.createLogger({
             count: 3
         },
         {
-            // Always log to console in development
-            level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+            level: 'debug',
             stream: process.stdout
         }
-    ]
+    ];
+};
+
+const logger = bunyan.createLogger({
+    name: 'ArtGalleryServer',
+    streams: getLoggerStreams(),
 });
 
 // Create specific loggers for different modules
