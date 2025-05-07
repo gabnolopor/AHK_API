@@ -56,7 +56,7 @@ const fileFilter = (req, file, cb) => {
 const corsOptions = {
   origin: (origin, callback) => {
     const env = process.env.NODE_ENV || 'development';
-    const allowedOrigins = ['https://zigzagworx.com'];
+    const allowedOrigins = ['https://www.zigzagworx.com'];
 
     if (!origin) {
       // Permitir peticiones sin origen (como Postman)
