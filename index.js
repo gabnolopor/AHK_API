@@ -55,21 +55,27 @@ const fileFilter = (req, file, cb) => {
 //configuración de cors
 const corsOptions = {
   origin: (origin, callback) => {
-    const allowedOrigins = process.env.CORS_ORIGINS.split(',').map(o => o.trim());
+    const env = process.env.NODE_ENV || 'development';
+    const allowedOrigins = ['https://zigzagworx.com'];
 
-    appLogger.info({
-      type: "cors_request",
-      origin: origin,
-    });
+    if (!origin) {
+      // Permitir peticiones sin origen (como Postman)
+      console.warn('[CORS] Sin origen - permitido');
+      return callback(null, true);
+    }
 
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
+    if (env === 'development') {
+      // Permitir todos los orígenes en desarrollo
+      console.log(`[CORS] [DEV] Origen permitido automáticamente: ${origin}`);
+      return callback(null, true);
+    }
+
+    if (allowedOrigins.includes(origin)) {
+      console.log(`[CORS] [PROD] Origen permitido: ${origin}`);
+      return callback(null, true);
     } else {
-      appLogger.warn({
-        type: "cors_blocked",
-        origin: origin,
-      });
-      callback(new Error("Not allowed by CORS"));
+      console.error(`[CORS] [PROD] Origen bloqueado: ${origin}`);
+      return callback(new Error('Not allowed by CORS'));
     }
   },
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
