@@ -275,10 +275,55 @@ app.get("/api/test-cloudinary", async (req, res) => {
     }
 });
 
-app.use(express.static(path.join(__dirname, '../client/dist')));
+//app.use(express.static(path.join(__dirname, '../client/dist')));
 
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+//app.get('*', (req, res) => {
+//  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+//});
+
+// Agregar estos manejadores de errores no capturados
+process.on('uncaughtException', (error) => {
+  appLogger.error({
+    type: "uncaught_exception",
+    error: error.message,
+    stack: error.stack,
+    timestamp: new Date().toISOString(),
+  });
+  // No cerramos el proceso para evitar que se reinicie
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  appLogger.error({
+    type: "unhandled_rejection",
+    reason: reason instanceof Error ? reason.message : String(reason),
+    stack: reason instanceof Error ? reason.stack : "No stack trace available",
+    timestamp: new Date().toISOString(),
+  });
+  // No cerramos el proceso para evitar que se reinicie
+});
+
+// Mejorar la conexión a la base de datos
+mongoose.connection.on('error', (err) => {
+  appLogger.error({
+    type: "mongodb_connection_error",
+    error: err.message,
+    timestamp: new Date().toISOString(),
+  });
+});
+
+mongoose.connection.on('disconnected', () => {
+  appLogger.warn({
+    type: "mongodb_disconnected",
+    timestamp: new Date().toISOString(),
+  });
+  // Intentar reconectar
+  setTimeout(() => {
+    appLogger.info({
+      type: "mongodb_reconnect_attempt",
+      timestamp: new Date().toISOString(),
+    });
+    mongoose.connect(process.env.MONGODB_URI);
+  }, 5000);
 });
 
 //inicio del servidor
@@ -292,8 +337,18 @@ app.listen(puerto, async () => {
     timestamp: new Date().toISOString(),
   });
 
-  // Test Cloudinary connection
-  await testConnection();
+  try {
+    // Test Cloudinary connection
+    await testConnection();
+  } catch (error) {
+    appLogger.error({
+      type: "cloudinary_connection_error",
+      error: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString(),
+    });
+    // Continuamos la ejecución aunque falle Cloudinary
+  }
 });
 
 //cierre del servidor
