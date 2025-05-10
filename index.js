@@ -31,33 +31,12 @@ const appLogger = createModuleLogger("app");
 
 const app = express();
 
-//configuración de multer
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, process.env.UPLOAD_PATH);
-  },
-  filename: function (req, file, cb) {
-    const filename = Date.now() + "-" + file.originalname;
-    cb(null, filename);
-  },
-});
-
-//filtro de archivos
-const fileFilter = (req, file, cb) => {
-  const allowedTypes = process.env.ALLOWED_FILE_TYPES.split(",");
-  if (allowedTypes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new Error("Invalid file type"), false);
-  }
-};
-
 //configuración de cors
 const corsOptions = {
   origin: (origin, callback) => {
+    console.log('[CORS] Origin recibido:', origin);
     const env = process.env.NODE_ENV || 'development';
-    const allowedOrigins = ['https://www.zigzagworx.com'];
-
+    const allowedOrigins = ['https://www.zigzagworx.com', 'https://zigzagworx.com'];
     if (!origin) {
       // Permitir peticiones sin origen (como Postman)
       console.warn('[CORS] Sin origen - permitido');
@@ -82,6 +61,27 @@ const corsOptions = {
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
   optionsSuccessStatus: 204,
+};
+
+//configuración de multer
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, process.env.UPLOAD_PATH);
+  },
+  filename: function (req, file, cb) {
+    const filename = Date.now() + "-" + file.originalname;
+    cb(null, filename);
+  },
+});
+
+//filtro de archivos
+const fileFilter = (req, file, cb) => {
+  const allowedTypes = process.env.ALLOWED_FILE_TYPES.split(",");
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error("Invalid file type"), false);
+  }
 };
 
 //configuración de helmet
