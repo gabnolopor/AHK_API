@@ -88,12 +88,20 @@ const fileFilter = (req, file, cb) => {
 app.use(helmet());
 
 //configuración de rate limit
-app.use(
-  rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-  })
-);
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  standardHeaders: true, // agrega RateLimit-* headers
+  legacyHeaders: false,  // desactiva X-RateLimit-* (opcional)
+});
+
+// Aplicar rate limiter a todas las rutas excepto /health
+app.use((req, res, next) => {
+  if (req.path === '/health') {
+    return next();
+  }
+  limiter(req, res, next);
+});
 
 //configuración de express
 app.use(cors(corsOptions));
@@ -126,20 +134,6 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use((err, req, res, next) => {
-  appLogger.error({
-    type: "error",
-    error: err.message,
-    stack: err.stack,
-    method: req.method,
-    url: req.url,
-    body: req.body,
-    timestamp: new Date().toISOString(),
-  });
-
-  res.status(500).json({ error: "Internal Server Error" });
-});
-
 //health check
 app.get("/health", (req, res) => {
   res.status(200).send("OK");
@@ -154,6 +148,23 @@ app.use("/api", biographyRoutes);
 app.use("/api", designRoutes);
 app.use("/api", digitalArtRoutes);
 app.use("/api", adminRoutes);
+
+app.use((err, req, res, next) => {
+  console.error('ERROR GLOBAL:', err.stack);
+  
+  appLogger.error({
+    type: "error",
+    error: err.message,
+    stack: err.stack,
+    method: req.method,
+    url: req.url,
+    body: req.body,
+    timestamp: new Date().toISOString(),
+  });
+  
+  res.status(500).send('Algo salió mal!');
+});
+
 //testing
 app.get("/test", (req, res) => {
   res.json({ message: "Test route working" });
@@ -275,12 +286,6 @@ app.get("/api/test-cloudinary", async (req, res) => {
     }
 });
 
-//app.use(express.static(path.join(__dirname, '../client/dist')));
-
-//app.get('*', (req, res) => {
-//  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
-//});
-
 // Agregar estos manejadores de errores no capturados
 process.on('uncaughtException', (error) => {
   appLogger.error({
@@ -329,7 +334,7 @@ mongoose.connection.on('disconnected', () => {
 //inicio del servidor
 const puerto = process.env.PORT || 3000;
 
-app.listen(puerto, async () => {
+app.listen(puerto, () => {
   appLogger.info({
     type: "server_start",
     port: puerto,
@@ -337,18 +342,15 @@ app.listen(puerto, async () => {
     timestamp: new Date().toISOString(),
   });
 
-  try {
-    // Test Cloudinary connection
-    await testConnection();
-  } catch (error) {
+  // Esto no bloquea el inicio
+  testConnection().catch(error => {
     appLogger.error({
       type: "cloudinary_connection_error",
       error: error.message,
       stack: error.stack,
       timestamp: new Date().toISOString(),
     });
-    // Continuamos la ejecución aunque falle Cloudinary
-  }
+  });
 });
 
 //cierre del servidor
