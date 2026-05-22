@@ -7,7 +7,7 @@ const adminLogger = createModuleLogger('admin-controller');
 const adminController = {
     login: async (req, res) => {
         try {
-            const { username, password } = req.body;
+            const { username, password, rememberMe } = req.body;
             console.log('Login attempt for username:', username); // Debug log
 
             // Find admin by username
@@ -26,11 +26,11 @@ const adminController = {
                 return res.status(401).json({ error: 'Invalid credentials' });
             }
 
-            // Generate JWT token
+            // Generate JWT token (30 days if "remember me", otherwise 24 hours)
             const token = jwt.sign(
                 { id: admin._id },
                 process.env.JWT_SECRET,
-                { expiresIn: '24h' }
+                { expiresIn: rememberMe ? '30d' : '24h' }
             );
 
             adminLogger.info({
