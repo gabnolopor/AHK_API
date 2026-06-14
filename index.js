@@ -20,6 +20,7 @@ const adminRoutes = require("./routes/adminRoutes");
 const biographyRoutes = require("./routes/BiographyRoutes");
 const designRoutes = require("./routes/DesignRoutes");
 const digitalArtRoutes = require("./routes/DigitalArtRoutes");
+const analyticsRoutes = require("./routes/analyticsRoutes");
 
 //configuración
 const mongoose = require("mongoose");
@@ -30,6 +31,8 @@ const appLogger = createModuleLogger("app");
 
 
 const app = express();
+
+app.set('trust proxy', 1);
 
 //configuración de cors
 const corsOptions = {
@@ -148,6 +151,7 @@ app.use("/api", biographyRoutes);
 app.use("/api", designRoutes);
 app.use("/api", digitalArtRoutes);
 app.use("/api", adminRoutes);
+app.use("/api", analyticsRoutes);
 
 app.use((err, req, res, next) => {
   console.error('ERROR GLOBAL:', err.stack);
