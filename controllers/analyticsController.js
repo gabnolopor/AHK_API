@@ -1,5 +1,6 @@
 const Visit = require('../models/Visit');
 const { getClientIp } = require('../utils/clientIp');
+const { lookupIpGeo } = require('../utils/ipGeo');
 const { createModuleLogger } = require('../utils/logger');
 
 const analyticsLogger = createModuleLogger('analytics-controller');
@@ -80,8 +81,17 @@ const analyticsController = {
 
             const referer = req.headers.referer || req.headers.referrer || '';
             const userAgent = req.headers['user-agent'] || '';
+            const geo = lookupIpGeo(ip);
 
-            await Visit.create({ ip, referer, userAgent });
+            await Visit.create({
+                ip,
+                referer,
+                userAgent,
+                country: geo.country,
+                region: geo.region,
+                city: geo.city,
+                timezone: geo.timezone,
+            });
 
             res.status(201).json({ ok: true });
         } catch (error) {
@@ -104,7 +114,7 @@ const analyticsController = {
             const dateFilter = { visitedAt: { $gte: periodStart } };
             const breakdownConfig = getBreakdownConfig(period);
 
-            const [periodVisits, uniqueIps, breakdown, visits] = await Promise.all([
+            const [periodVisits, uniqueIps, breakdown, visits, topCountries] = await Promise.all([
                 Visit.countDocuments(dateFilter),
                 Visit.distinct('ip', dateFilter),
                 Visit.aggregate([
@@ -134,8 +144,26 @@ const analyticsController = {
                 ]),
                 Visit.find(dateFilter)
                     .sort({ visitedAt: -1 })
-                    .select('ip referer userAgent visitedAt')
+                    .select('ip referer userAgent country region city timezone visitedAt')
                     .lean(),
+                Visit.aggregate([
+                    { $match: { ...dateFilter, country: { $ne: '' } } },
+                    {
+                        $group: {
+                            _id: '$country',
+                            visits: { $sum: 1 },
+                        },
+                    },
+                    { $sort: { visits: -1 } },
+                    { $limit: 10 },
+                    {
+                        $project: {
+                            _id: 0,
+                            country: '$_id',
+                            visits: 1,
+                        },
+                    },
+                ]),
             ]);
 
             res.json({
@@ -149,10 +177,15 @@ const analyticsController = {
                     unit: breakdownConfig.label,
                     items: breakdown,
                 },
+                topCountries,
                 visits: visits.map((visit) => ({
                     ip: visit.ip,
                     referer: visit.referer,
                     userAgent: visit.userAgent,
+                    country: visit.country,
+                    region: visit.region,
+                    city: visit.city,
+                    timezone: visit.timezone,
                     visitedAt: visit.visitedAt,
                 })),
             });

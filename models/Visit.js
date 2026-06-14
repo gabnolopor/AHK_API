@@ -15,6 +15,22 @@ const visitSchema = new mongoose.Schema({
         type: String,
         default: '',
     },
+    country: {
+        type: String,
+        default: '',
+    },
+    region: {
+        type: String,
+        default: '',
+    },
+    city: {
+        type: String,
+        default: '',
+    },
+    timezone: {
+        type: String,
+        default: '',
+    },
     visitedAt: {
         type: Date,
         default: Date.now,
